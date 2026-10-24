@@ -78,6 +78,8 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
   align-items:baseline}
 .hero-how b{color:var(--accent); font-weight:500}
 .hero-how li::before{content:attr(data-n); color:var(--dim); font-size:11px}
+.landing .demo{display:block; width:100%; max-width:100%; height:auto;
+  border:1px solid var(--line); margin:0 0 2lh; background:var(--bg-1)}
 .landing figure.dd{margin:0 0 2lh}
 .hero-meta{margin:0 0 2lh; font-size:11.5px; color:var(--dim)}
 .hero-meta span{color:var(--muted)}
@@ -256,6 +258,26 @@ pre.code.dim{opacity:.6}
 .why b.tag{font-size:10px; margin-right:1ch; font-weight:700}
 .why.r b.tag{color:var(--pass)} .why.w b.tag{color:var(--miss)}
 
+/* mascot — ASCII, because an SVG character would fight the register */
+.goalrow{display:flex; gap:3ch; align-items:flex-start}
+.goalcol{flex:1 1 auto; min-width:0}
+.mascot{flex:none; width:16ch; text-align:center; user-select:none;
+  padding-top:.2lh; transition:opacity .12s}
+.mascot-art{margin:0; font-family:inherit; font-size:12px; line-height:1.25;
+  color:var(--dim); white-space:pre; background:none; border:0; padding:0}
+.mascot-say{display:block; margin-top:.4lh; font-size:10.5px; color:var(--dim);
+  line-height:1.4}
+.mascot[data-state="typing"] .mascot-art{color:var(--accent)}
+.mascot[data-state="typing"] .mascot-say{color:var(--muted)}
+.mascot[data-state="pass"] .mascot-art,
+.mascot[data-state="pass"] .mascot-say{color:var(--pass)}
+.mascot[data-state="close"] .mascot-art,
+.mascot[data-state="close"] .mascot-say{color:var(--warn)}
+.mascot[data-state="miss"] .mascot-art,
+.mascot[data-state="miss"] .mascot-say{color:var(--miss)}
+.mascot[data-state="hint"] .mascot-art,
+.mascot[data-state="hint"] .mascot-say{color:var(--warn)}
+
 /* write */
 .goal{font-size:15px; font-weight:500; line-height:1.5; margin:0 0 .3lh;
   text-wrap:balance; color:var(--fg)}
@@ -326,6 +348,7 @@ footer a{color:var(--link)}
 @media (max-width:640px){
   .rail-parts{flex-wrap:wrap; gap:1lh 2ch} .part{flex:1 1 44%}
   .keyhint{display:none} .tab .tsub{display:none}
+  .mascot{display:none}
   .wrap{padding:1lh 1ch 4lh}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -3156,7 +3179,19 @@ function briefDiagram(part){
 }
 function renderLanding(){
   const fig = document.getElementById("landingFig");
-  if(fig && !fig.innerHTML) fig.innerHTML = diagramLoop();
+  if(!fig || fig.innerHTML) return;
+  /* the demo ships beside the page; a single-file copy simply has no video,
+     so it is inserted optimistically and removed if it cannot load */
+  const v = document.createElement("video");
+  v.className = "demo"; v.src = "docs/demo.mp4";
+  v.autoplay = true; v.loop = true; v.muted = true;
+  v.playsInline = true; v.setAttribute("playsinline", "");
+  v.setAttribute("aria-label", "A drill being answered: learn, choose, then write it from memory");
+  v.onerror = () => v.remove();
+  fig.appendChild(v);
+  const d = document.createElement("div");
+  d.innerHTML = diagramLoop();
+  fig.appendChild(d);
 }
 /* two screens: the pitch, then the gym. never both at once. */
 function showScreen(){
@@ -3330,6 +3365,24 @@ function lockIn(d, opts){
   armEnter(lock);
 }
 
+/* ---------- mascot ---------- */
+const MASCOT = {
+  idle:   ["( o.o )", "from memory. no peeking."],
+  typing: ["( -.o )", "keep going."],
+  pass:   ["( ^.^ )", "clean. next one."],
+  close:  ["( o.O )", "nearly \u2014 check the list."],
+  miss:   ["( ;.; )", "try again. the answer is still hidden."],
+  hint:   ["( ?.? )", "hint is out. still counts, just not clean."]
+};
+function setMascot(state){
+  const el = document.getElementById("mascot");
+  if(!el) return;
+  const m = MASCOT[state] || MASCOT.idle;
+  el.dataset.state = state;
+  el.innerHTML = '<pre class="mascot-art">' + esc(" /\\_/\\\n" + m[0] + "\n > ^ <") + '</pre>' +
+                 '<span class="mascot-say">' + esc(m[1]) + '</span>';
+}
+
 /* ============================================================
    STAGE 3: Write   (with retry, and the answer withheld until asked)
    ============================================================ */
@@ -3342,8 +3395,10 @@ function renderWrite(d){
   '<article class="card">' + cardHead(d, [learn,"was","now"]) +
     '<div class="card-body">' +
       lecturePanel(d) +
+      '<div class="goalrow"><div class="goalcol">' +
       '<p class="goal">' + d.goal + '</p>' +
       (d.ctx ? '<p class="ctx">' + d.ctx + '</p>' : '') +
+      '</div><div class="mascot" id="mascot" aria-hidden="true"></div></div>' +
       '<div class="padwrap">' +
       (d.kind === "code" && d.file ? '<div class="filetab">' + esc(d.file) + '</div>' : '') +
       '<div class="pad">' +
@@ -3367,13 +3422,16 @@ function renderWrite(d){
   wireSteps();
   document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; render(); };
   graded = null;
+  setMascot(S.hinted[d.id] ? "hint" : "idle");
 
   const ta = document.getElementById("entry");
   ta.value = draft;
   if(d.kind === "code") autoGrow(ta);
   if(!lectureOpen){ ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
 
-  ta.addEventListener("input", () => { draft = ta.value; if(d.kind === "code") autoGrow(ta); });
+  ta.addEventListener("input", () => { draft = ta.value;
+    if(!graded) setMascot(ta.value.trim() ? "typing" : "idle");
+    if(d.kind === "code") autoGrow(ta); });
   ta.addEventListener("keydown", e => {
     if(e.key === "Enter" && (e.metaKey || e.ctrlKey)){ e.preventDefault(); doCheck(); return; }
     if(e.key === "Enter" && d.kind === "cmd" && !e.shiftKey){ e.preventDefault(); doCheck(); return; }
@@ -3390,6 +3448,7 @@ function renderWrite(d){
     S.hinted[d.id] = true; save(); renderRail();
     document.getElementById("hintSlot").innerHTML = hintHTML(d);
     document.getElementById("hintBtn").disabled = true;
+    setMascot("hint");
     ta.focus();
   };
   document.getElementById("skipBtn").onclick = () => {
@@ -3501,6 +3560,7 @@ function showVerdict(d, res, input, forceReveal){
     const el = document.getElementById(id); if(el) el.disabled = true;
   });
 
+  setMascot(res.verdict);
   const next = document.getElementById("nextBtn");
   const retry = document.getElementById("retryBtn");
   const revealBtn = document.getElementById("revealBtn");

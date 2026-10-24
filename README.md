@@ -12,6 +12,8 @@ moments that go wrong quietly.
 
 81 drills · Django 31 · Python 25 · JavaScript 25 · one HTML file · no signup · MIT
 
+<img src="docs/demo.gif" alt="A drill being answered: learn the thing, choose it from four options, then write it from memory." width="100%">
+
 ---
 
 ## Three screens per drill
