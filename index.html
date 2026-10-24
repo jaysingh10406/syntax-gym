@@ -95,6 +95,7 @@ header.top{display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap;
 /* ---------- track tabs ---------- */
 .tracks{display:flex; border-bottom:1px solid var(--rule); margin-top:16px}
 .tab{appearance:none; background:none; border:0; border-bottom:2px solid transparent;
+  text-transform:none; letter-spacing:0;
   padding:9px 16px 8px; cursor:pointer; display:flex; align-items:center; gap:9px;
   font-family:"Geist",sans-serif; font-weight:600; font-size:12px; color:var(--soft)}
 .tab .tsub{font-family:"Geist Mono",monospace; font-weight:400; font-size:9px; color:var(--soft)}
@@ -196,6 +197,9 @@ pre.code{margin:0; background:var(--t-paper); color:var(--t-ink);
   overflow-x:auto; font-family:"Geist Mono",ui-monospace,Menlo,monospace;
   font-size:12.5px; line-height:1.65; tab-size:4}
 .filetab + pre.code, .filetab + .pad{border-radius:0 0 2px 2px; border-top:0}
+/* the inline-code chip must never paint inside a terminal panel */
+pre.code code{background:none; padding:0; border:0; border-radius:0;
+  font-family:inherit; font-size:inherit; color:inherit; letter-spacing:inherit}
 pre.code.dim{opacity:.62}
 .showlbl{display:block; margin-bottom:7px}
 .hljs-keyword,.hljs-literal,.hljs-selector-tag,.hljs-name{color:var(--c-key)}
@@ -217,7 +221,8 @@ pre.code.dim{opacity:.62}
 .opts{display:flex; flex-direction:column; margin:0 0 16px; border-top:1px solid var(--rule)}
 .opt{display:flex; gap:13px; align-items:flex-start; width:100%; text-align:left;
   cursor:pointer; padding:12px 10px; border:0; border-bottom:1px solid var(--rule);
-  background:transparent; font-family:"Geist Mono",monospace; font-size:12.5px;
+  background:transparent; text-transform:none; letter-spacing:0;
+  font-family:"Geist Mono",monospace; font-size:12.5px;
   line-height:1.6; color:var(--ink); white-space:pre-wrap; word-break:break-word}
 .opt:hover:not(:disabled){background:var(--paper-2)}
 .opt:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
