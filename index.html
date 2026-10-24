@@ -625,7 +625,7 @@ drills:[
 {
   id:"p1-version", part:1, kind:"cmd", topic:"sanity check",
   teach:{
-    body:"Before a project exists there is no <code>manage.py</code>, so anything project-local is unavailable. What you do have is Django as an importable package — and Python can execute a package's <code>__main__</code> directly with the <code>-m</code> flag.",
+    body:"Before a project exists there is no <code>manage.py</code>, so anything project-local is unavailable. What you do have is Django as an importable package &mdash; and Python can execute a package's <code>__main__</code> directly with the <code>-m</code> flag. This is effectively the only Django command you will ever run that does not go through <code>manage.py</code>, which is why it looks unlike every command after it.",
     show:"python -m django --version"
   },
   mc:{
@@ -689,7 +689,7 @@ drills:[
 {
   id:"p1-startapp", part:1, kind:"cmd", topic:"scaffold",
   teach:{
-    body:"Now that a project exists, scaffolding goes through <code>manage.py</code>. <code>startapp</code> generates a directory with <code>models.py</code>, <code>views.py</code>, <code>admin.py</code>, <code>apps.py</code>, <code>tests.py</code> and a migrations package. Notably it does <b>not</b> generate <code>urls.py</code> — you write that yourself.",
+    body:"Now that a project exists, scaffolding goes through <code>manage.py</code>. <code>startapp</code> generates <code>models.py</code>, <code>views.py</code>, <code>admin.py</code>, <code>apps.py</code>, <code>tests.py</code> and a migrations package.<br><br>Notably it does <b>not</b> generate <code>urls.py</code>. Every tutorial creates that file by hand, and forgetting it is why a new app's routes 404 even though the views exist.",
     show:"python manage.py startapp polls"
   },
   mc:{
@@ -711,7 +711,7 @@ drills:[
 {
   id:"p1-view", part:1, kind:"code", file:"polls/views.py", topic:"first view",
   teach:{
-    body:"A view is a plain function. It takes the <code>HttpRequest</code> as its first positional argument — always, no exceptions — and must return an <code>HttpResponse</code>. Returning a bare string is the single most common first mistake.",
+    body:"A view is a plain function. It takes the <code>HttpRequest</code> as its first positional argument &mdash; always, no exceptions &mdash; and must return an <code>HttpResponse</code>.<br><br>Returning a bare string is the most common first mistake: Django raises <i>The view didn't return an HttpResponse object</i> rather than rendering your text. The request parameter is positional, so its name is yours to choose, but everyone calls it <code>request</code>.",
     show:'from django.http import HttpResponse\n\n\ndef index(request):\n    return HttpResponse("Hello, world. You\'re at the polls index.")'
   },
   mc:{
@@ -765,7 +765,7 @@ drills:[
 {
   id:"p1-rooturls", part:1, kind:"code", file:"mysite/urls.py", topic:"urlconf",
   teach:{
-    body:"<code>include()</code> chops off the matched prefix and hands the rest to the app's URLconf. It takes the module as a <b>dotted string</b>, which keeps the project from importing every app's views at startup.",
+    body:"<code>include()</code> chops off the matched prefix and hands the remainder to the app's URLconf, so the app never has to know where it is mounted. Move it from <code>polls/</code> to <code>vote/</code> and nothing inside the app changes.<br><br>It takes the module as a <b>dotted string</b>, not an import. That keeps the project from importing every app's views at startup, which would make circular imports almost unavoidable.",
     show:'from django.contrib import admin\nfrom django.urls import include, path\n\nurlpatterns = [\n    path("polls/", include("polls.urls")),\n    path("admin/", admin.site.urls),\n]'
   },
   mc:{
@@ -792,7 +792,7 @@ drills:[
 {
   id:"p2-migrate", part:2, kind:"cmd", topic:"migrations",
   teach:{
-    body:"A fresh project already has pending migrations from the built-in apps — auth, admin, sessions, contenttypes. <b>migrate</b> applies whatever migration files exist and have not run yet. It writes no files and inspects no models.",
+    body:"A fresh project already has pending migrations before you write a single model &mdash; <code>auth</code>, <code>admin</code>, <code>sessions</code> and <code>contenttypes</code> all ship their own. That is why the first thing you do in a new checkout is migrate, not makemigrations.<br><br><b>migrate</b> applies whatever migration files exist and have not run yet. It writes no files and inspects no models; it only reads the migration history table and catches the database up.",
     show:"python manage.py migrate"
   },
   mc:{
@@ -814,7 +814,7 @@ drills:[
 {
   id:"p2-installed", part:2, kind:"code", file:"mysite/settings.py", topic:"settings",
   teach:{
-    body:"Django will accept the bare string <code>\"polls\"</code>, but the tutorial registers the <code>AppConfig</code> subclass that <code>startapp</code> generated in <code>polls/apps.py</code>. Referencing the config class is what lets an app carry its own metadata and startup hooks.",
+    body:"An app Django does not know about is just a directory. Until it is in <code>INSTALLED_APPS</code>, its models produce no tables, its templates are not found and its admin registrations never run.<br><br>Django accepts the bare string &quot;polls&quot;, but the tutorial registers the <code>AppConfig</code> subclass that <code>startapp</code> generated in <code>polls/apps.py</code>. Referencing the config class is what lets an app carry its own metadata, a verbose name, and startup hooks.",
     show:'INSTALLED_APPS = [\n    "polls.apps.PollsConfig",\n    "django.contrib.admin",\n    ...\n]'
   },
   mc:{
@@ -867,7 +867,7 @@ drills:[
 {
   id:"p2-makemigrations", part:2, kind:"cmd", topic:"migrations",
   teach:{
-    body:"This reads your models, diffs them against the existing migration history, and writes a new file — <code>polls/migrations/0001_initial.py</code>. The app label is optional but worth typing: without it Django scans every app.",
+    body:"This reads your models, diffs them against the migration history, and writes a new file &mdash; <code>polls/migrations/0001_initial.py</code>. Nothing reaches the database.<br><br>The app label is optional but worth typing: without it Django scans every app and can quietly write migrations you did not intend. The generated file is ordinary Python you are expected to read before applying it, especially for renames, which Django often guesses as a drop plus an add.",
     show:"python manage.py makemigrations polls"
   },
   mc:{
@@ -909,7 +909,7 @@ drills:[
 {
   id:"p2-check", part:2, kind:"cmd", topic:"diagnostics",
   teach:{
-    body:"Runs the system check framework: model field errors, bad settings, conflicting URL names. No files written, no database connection needed. Cheap enough to put in CI.",
+    body:"Runs the system check framework: model field errors, conflicting <code>related_name</code>s, bad settings, duplicate URL names, missing template directories.<br><br>It writes no files and opens no database connection, which makes it cheap enough to run in CI on every commit and fast enough to run before every migration. Most of what it reports would otherwise surface as a confusing traceback on the first request after deploy.",
     show:"python manage.py check"
   },
   mc:{
@@ -954,7 +954,7 @@ drills:[
 {
   id:"p2-recent", part:2, kind:"code", file:"polls/models.py", topic:"models",
   teach:{
-    body:"Models can carry plain methods. The one detail that matters: use <code>django.utils.timezone.now()</code>, not <code>datetime.datetime.now()</code>. With <code>USE_TZ</code> on, stored datetimes are timezone-aware and comparing them against a naive datetime raises a TypeError.",
+    body:"Models can carry plain methods, and they run wherever the instance goes &mdash; shell, template, admin.<br><br>The detail that matters: use <code>django.utils.timezone.now()</code>, never <code>datetime.datetime.now()</code>. With <code>USE_TZ</code> enabled Django stores datetimes as timezone-aware UTC, and comparing an aware value to a naive one raises <code>TypeError: can't compare offset-naive and offset-aware datetimes</code>. It is the most common Django datetime bug there is.",
     show:'import datetime\n\nfrom django.utils import timezone\n\n\nclass Question(models.Model):\n    # ...\n    def was_published_recently(self):\n        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)'
   },
   mc:{
@@ -982,7 +982,7 @@ drills:[
 {
   id:"p2-shell", part:2, kind:"cmd", topic:"shell",
   teach:{
-    body:"Plain <code>python</code> cannot import your models — <code>DJANGO_SETTINGS_MODULE</code> is unset and the app registry has not been populated. The <code>shell</code> command does both first, then drops you into the REPL.",
+    body:"Plain <code>python</code> cannot import your models. <code>DJANGO_SETTINGS_MODULE</code> is unset and the app registry has not been populated, so the import raises <code>ImproperlyConfigured</code> before it reaches your code.<br><br>The <code>shell</code> command does both steps first, then drops you into the REPL with everything importable. It is where you test a query before committing it to a view, and the fastest way to answer &ldquo;what does this queryset actually return&rdquo;.",
     show:"python manage.py shell"
   },
   mc:{
@@ -1031,7 +1031,7 @@ drills:[
 {
   id:"p2-superuser", part:2, kind:"cmd", topic:"admin",
   teach:{
-    body:"Prompts for username, email and password, and creates a user with <code>is_staff</code> and <code>is_superuser</code> set. Requires <code>migrate</code> to have run first, since it needs the auth tables.",
+    body:"Prompts for username, email and password, and creates a user with both <code>is_staff</code> and <code>is_superuser</code> set &mdash; staff grants admin access at all, superuser grants every permission inside it.<br><br>It requires <code>migrate</code> to have run first, since it writes to the auth tables. Running it on a fresh database before migrating is a common first-day error, and the traceback points at a missing table rather than at the real cause.",
     show:"python manage.py createsuperuser"
   },
   mc:{
@@ -1052,7 +1052,7 @@ drills:[
 {
   id:"p2-admin", part:2, kind:"code", file:"polls/admin.py", topic:"admin",
   teach:{
-    body:"One call and Django introspects the model to generate a full list-edit-delete interface. <code>admin.site</code> is the default <code>AdminSite</code> instance — the registry lives on it, not on the <code>admin</code> module.",
+    body:"One call and Django introspects the model to generate a full list, create, edit and delete interface, with form widgets chosen from the field types.<br><br><code>admin.site</code> is the default <code>AdminSite</code> instance &mdash; the registry lives on it, not on the <code>admin</code> module. This file is also why <code>INSTALLED_APPS</code> matters: Django only imports <code>admin.py</code> for apps it knows about, so an unregistered app's admin never loads.",
     show:'from django.contrib import admin\n\nfrom .models import Question\n\nadmin.site.register(Question)'
   },
   mc:{
@@ -1079,7 +1079,7 @@ drills:[
 {
   id:"p3-stubviews", part:3, kind:"code", file:"polls/views.py", topic:"views",
   teach:{
-    body:"Captured URL segments arrive as <b>keyword arguments</b>, after <code>request</code>. The parameter name must match the name inside the angle brackets exactly — <code>&lt;int:question_id&gt;</code> needs a parameter called <code>question_id</code>, and nothing else will do.",
+    body:"Captured URL segments arrive as <b>keyword arguments</b>, after <code>request</code>. The parameter name must match the name inside the angle brackets exactly.<br><br>Get it wrong and the failure is immediate and blunt: <code>detail() got an unexpected keyword argument 'question_id'</code>. This is also the rule that makes part 4 awkward, because generic <code>DetailView</code> insists the captured value be called <code>pk</code> and nothing else.",
     show:'def detail(request, question_id):\n    return HttpResponse("You\'re looking at question %s." % question_id)'
   },
   mc:{
@@ -1131,7 +1131,7 @@ drills:[
 {
   id:"p3-indexquery", part:3, kind:"code", file:"polls/views.py", topic:"ORM",
   teach:{
-    body:"A leading minus on the field name reverses the sort. Slicing a QuerySet becomes SQL <code>LIMIT</code>, so only five rows come back — but a sliced QuerySet can no longer be filtered or re-ordered, which is why the slice goes last.",
+    body:"A leading minus on the field name reverses the sort, so &quot;-pub_date&quot; is newest first.<br><br>Slicing a QuerySet becomes SQL <code>LIMIT</code>, so only five rows cross the wire rather than the whole table. But a sliced QuerySet can no longer be filtered or re-ordered &mdash; Django raises <code>TypeError: Cannot filter a query once a slice has been taken</code> &mdash; which is why the slice always goes last.",
     show:'def index(request):\n    latest_question_list = Question.objects.order_by("-pub_date")[:5]\n    output = ", ".join([q.question_text for q in latest_question_list])\n    return HttpResponse(output)'
   },
   mc:{
@@ -1187,7 +1187,7 @@ drills:[
 {
   id:"p3-render", part:3, kind:"code", file:"polls/views.py", topic:"shortcuts",
   teach:{
-    body:"The long form is three steps: <code>loader.get_template(name)</code>, <code>template.render(context, request)</code>, <code>HttpResponse(...)</code>. <code>render()</code> collapses all three. Request first, template name second, context third — and once you use it you no longer import <code>loader</code> or <code>HttpResponse</code> at all.",
+    body:"The long form is three steps: <code>loader.get_template(name)</code>, then <code>template.render(context, request)</code>, then wrap the result in <code>HttpResponse</code>. <code>render()</code> collapses all three into one call.<br><br>Request first, template name second, context third. Passing the request is not bookkeeping &mdash; it is what makes context processors and <code>{% csrf_token %}</code> work. Once you use it you stop importing <code>loader</code> and <code>HttpResponse</code> entirely.",
     show:'from django.shortcuts import render\n\n\ndef index(request):\n    latest_question_list = Question.objects.order_by("-pub_date")[:5]\n    context = {"latest_question_list": latest_question_list}\n    return render(request, "polls/index.html", context)'
   },
   mc:{
@@ -1213,7 +1213,7 @@ drills:[
 {
   id:"p3-404", part:3, kind:"code", file:"polls/views.py", topic:"shortcuts",
   teach:{
-    body:"The long form catches <code>Question.DoesNotExist</code> and raises <code>Http404</code>. The shortcut does it in one line: model class first, then the lookup as <b>keyword arguments</b>. There is a <code>get_list_or_404()</code> for querysets too.",
+    body:"The long form is a try/except around <code>Question.DoesNotExist</code> that re-raises as <code>Http404</code>. You would write it at the top of nearly every detail view, so Django ships it as a shortcut.<br><br>It takes the model class first, then the lookup as <b>keyword arguments</b>. A bare positional raises <code>TypeError</code>. There is a matching <code>get_list_or_404()</code> that 404s on an empty queryset rather than a missing row.",
     show:'from django.shortcuts import get_object_or_404, render\n\n\ndef detail(request, question_id):\n    question = get_object_or_404(Question, pk=question_id)\n    return render(request, "polls/detail.html", {"question": question})'
   },
   mc:{
@@ -3164,12 +3164,16 @@ function wireSteps(){
     };
   });
 }
+function docsLink(d){
+  return '<a class="docs" href="' + TRACK.sourceBase + d.docs + '" target="_blank" '
+       + 'rel="noopener">read the source \u2192 ' + esc(TRACK.sourceName) + '/' + esc(d.docs) + '</a>';
+}
 function lecturePanel(d){
   if(!lectureOpen) return "";
-  return '<div class="lecture"><span class="eyebrow">Lecture · ' + esc(d.topic) + '</span>' +
+  return '<div class="lecture"><span class="eyebrow">lecture · ' + esc(d.topic) + '</span>' +
     '<p class="teach-body">' + d.teach.body + '</p>' +
     (d.file ? '<div class="filetab">' + esc(d.file) + '</div>' : '') +
-    codeBlock(d.teach.show, langOf(d)) + '</div>';
+    codeBlock(d.teach.show, langOf(d)) + docsLink(d) + '</div>';
 }
 
 /* ---------- how-it-works panel + per-part diagram ---------- */
@@ -3243,7 +3247,7 @@ function renderTeach(d){
       '<p class="teach-body">' + d.teach.body + '</p>' +
       (d.file ? '<div class="filetab">' + esc(d.file) + '</div>'
               : '<span class="eyebrow showlbl">The shape</span>') +
-      codeBlock(d.teach.show, langOf(d)) +
+      codeBlock(d.teach.show, langOf(d)) + docsLink(d) +
       '<div class="actions">' +
         '<button class="primary" id="goBtn">got it → choose</button>' +
         '<button class="ghost" id="jumpBtn">i know this, let me write it</button>' +
