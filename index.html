@@ -86,9 +86,14 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
 
 /* masthead */
 header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap; padding-bottom:1lh}
-.brand{font-size:19px; font-weight:700; color:var(--fg); letter-spacing:-0.01em}
+.brand{font-size:19px; font-weight:700; color:var(--fg); letter-spacing:-0.01em;
+  appearance:none; background:none; border:0; padding:0; height:auto;
+  font-family:inherit; text-transform:none; cursor:pointer}
+.brand:hover{color:var(--fg)}
+.brand:hover em{color:var(--head)}
+.brand:focus-visible{outline:1px solid var(--accent); outline-offset:3px}
 .brand em{font-style:normal; color:var(--accent)}
-.brand::before{content:"▞ "; color:var(--head)}
+.brand::before{content:"▞\00a0"; color:var(--head)}
 .topctl{display:flex; align-items:center; gap:1ch; margin-left:auto; flex-wrap:wrap}
 .switch{display:inline-flex; align-items:center; gap:1ch; cursor:pointer; font-size:11px;
   padding:0 1ch; height:2lh; border:1px solid var(--line); background:none; color:var(--muted)}
@@ -131,7 +136,17 @@ figure.dd figcaption{margin-top:.5lh; font-size:11px; color:var(--dim)}
 /* rail */
 .rail{margin:1.5lh 0 0; padding-top:1lh; border-top:1px solid var(--line)}
 .rail-parts{display:flex; gap:2ch}
-.part{flex:1 1 0; min-width:0}
+.part{flex:1 1 0; min-width:0; appearance:none; background:none; border:0;
+  padding:0; height:auto; display:block; text-align:left; cursor:pointer;
+  font-family:inherit; font-size:inherit; color:inherit;
+  text-transform:none; letter-spacing:0}
+.part:hover .part-name{color:var(--fg)}
+.part:hover .tick{background:var(--bg-3)}
+.part:hover .tick.pass{background:var(--pass)}
+.part:hover .tick.close{background:var(--warn)}
+.part:hover .tick.miss{background:var(--miss)}
+.part:hover .tick.cur{background:var(--accent)}
+.part:focus-visible{outline:1px solid var(--accent); outline-offset:3px}
 .part-head{display:flex; justify-content:space-between; gap:1ch; margin-bottom:.3lh}
 .part-name{font-size:11px; color:var(--dim); white-space:nowrap; overflow:hidden;
   text-overflow:ellipsis; flex:1 1 auto; min-width:0}
@@ -319,7 +334,7 @@ footer a{color:var(--link)}
 </head><body>
 <div class="wrap" id="wrap" data-track="django">
   <header class="top">
-    <div class="brand">syntax <em>gym</em></div>
+    <button class="brand" id="brand" title="back to the start">syntax&nbsp;<em>gym</em></button>
     <div class="topctl">
       <button class="ghost" id="aboutBtn">about</button>
       <label class="switch on" id="aiSwitch" title="Have Claude judge free-form code answers">
@@ -2854,8 +2869,7 @@ const LAST_KEY = "syntax-gym/last-track";
 let TRACK = null, S = null;
 
 function blank(){
-  return {i:0, stage:"teach", seenBrief:{}, taught:{}, lecture:true,
-          results:{}, mcResults:{}, attempts:{},
+  return {i:0, stage:"teach", seenBrief:{}, taught:{}, results:{}, mcResults:{}, attempts:{},
           firstTry:{}, hinted:{}, revealed:{}, streak:0, best:0, redo:[],
           phase:"main", ai:true};
 }
@@ -2909,7 +2923,7 @@ function advance(){
     if(!S.redo.length) S.phase = "done";
   }
   S.stage = (S.phase === "redo") ? "choose" : "teach";
-  lectureOpen = S.lecture !== false;
+  lectureOpen = false;
   save();
 }
 
@@ -3022,7 +3036,7 @@ function selectTrack(id){
   document.getElementById("tagline").textContent = TRACK.blurb;
   document.getElementById("srcLine").innerHTML =
     TRACKS.map(t => esc(t.sourceName)).join(", ");
-  lectureOpen = S.lecture !== false;
+  lectureOpen = false;
   renderTabs();
   setAiSwitch(S.ai !== false);
   render();
@@ -3040,12 +3054,22 @@ function renderRail(){
         .filter(Boolean).join(" ");
       return '<span class="' + cls + '" title="' + esc(stripTags(d.goal).slice(0,70)) + '"></span>';
     }).join("");
-    return '<div class="part' + (active ? " active" : "") + '"><div class="part-head">' +
+    return '<button type="button" class="part' + (active ? " active" : "") + '" data-part="' + p.n + '"><div class="part-head">' +
       '<span class="part-name">' + p.n + ' · ' + esc(p.name) + '</span>' +
       '<span class="part-n">' + done + '/' + ds.length + '</span></div>' +
-      '<div class="ticks">' + ticks + '</div></div>';
+      '<div class="ticks">' + ticks + '</div></button>';
   }).join("");
   const r = S.results;
+  Array.from(railEl.querySelectorAll(".part[data-part]")).forEach(b => {
+    b.onclick = () => {
+      const n = parseInt(b.dataset.part, 10);
+      const at = TRACK.drills.findIndex(x => x.part === n);
+      if(at < 0) return;
+      S.phase = "main"; S.i = at; S.stage = "teach";
+      lectureOpen = false; graded = null; draft = "";
+      save(); render(); window.scrollTo({top:0});
+    };
+  });
   document.getElementById("sPass").textContent  = Object.values(r).filter(v => v === "pass").length;
   document.getElementById("sFirst").textContent = Object.keys(S.firstTry).length;
   document.getElementById("sSpot").textContent  = Object.values(S.mcResults).filter(Boolean).length;
@@ -3079,24 +3103,28 @@ function setAiSwitch(on){
 /* ============================================================
    STEPPER  (Learn is clickable - it toggles the lecture panel)
    ============================================================ */
-let lectureOpen = true;
+let lectureOpen = false;
 let landingOpen = false;
 const SEEN_LANDING = "syntax-gym/seen-landing";
 
+const STAGES = ["teach", "choose", "write"];
 function cardHead(d, states){
   const idx = TRACK.drills.indexOf(d) + 1;
   const isRedo = S.phase === "redo";
   const kindCls = isRedo ? "k-redo" : (d.kind === "cmd" ? "k-cmd" : "k-code");
   const kindTxt = isRedo ? "requeued" : (d.kind === "cmd" ? "command" : "code");
   const names = ["learn", "choose", "write"];
+  const here = STAGES.indexOf(S.stage);
   const steps = names.map((n, k) => {
-    const cls = "step " + (states[k] || "");
-    const peek = (k === 0 && S.stage !== "teach")
-      ? '<span class="peek">' + (lectureOpen ? "\u25be hide" : "\u25b8 re-read") + '</span>' : "";
-    const inner = '<span class="n">' + (k+1) + '</span><span>' + n + '</span>' + peek;
-    return (k === 0 && S.stage !== "teach")
-      ? '<button type="button" class="' + cls + '" id="lecStep">' + inner + '</button>'
-      : '<div class="' + cls + '">' + inner + '</div>';
+    const st = states[k] || "";
+    const done = st.indexOf("was") === 0;
+    const mark = done ? "\u2713" : String(k + 1);
+    const back = k < here;                       /* only ever step backwards */
+    const inner = '<span class="n">' + mark + '</span><span>' + n + '</span>' +
+                  (back ? '<span class="peek">\u2039 back</span>' : "");
+    return back
+      ? '<button type="button" class="step ' + st + '" data-stage="' + STAGES[k] + '">' + inner + '</button>'
+      : '<div class="step ' + st + '">' + inner + '</div>';
   }).join("");
   return '<div class="card-head">' +
       '<span class="seq">' + String(idx).padStart(2,"0") + ' / ' + TRACK.drills.length + '</span>' +
@@ -3104,9 +3132,14 @@ function cardHead(d, states){
       '<span class="topic">' + esc(d.topic) + '</span>' +
     '</div><div class="steprow">' + steps + '</div>';
 }
-function wireLectureStep(d){
-  const b = document.getElementById("lecStep");
-  if(b) b.onclick = () => { lectureOpen = !lectureOpen; S.lecture = lectureOpen; save(); render(); };
+function wireSteps(){
+  Array.from(document.querySelectorAll(".step[data-stage]")).forEach(b => {
+    b.onclick = () => {
+      S.stage = b.dataset.stage;
+      lectureOpen = false; graded = null;
+      save(); render(); window.scrollTo({top:0});
+    };
+  });
 }
 function lecturePanel(d){
   if(!lectureOpen) return "";
@@ -3183,10 +3216,11 @@ function renderTeach(d){
       '</div>' +
     '</div>' +
   '</article>';
+  wireSteps();
   const b = document.getElementById("goBtn");
   b.focus();
-  b.onclick = () => { S.stage = "choose"; save(); render(); };
-  document.getElementById("jumpBtn").onclick = () => { S.stage = "write"; save(); render(); };
+  b.onclick = () => { S.stage = "choose"; lectureOpen = false; save(); render(); };
+  document.getElementById("jumpBtn").onclick = () => { S.stage = "write"; lectureOpen = false; save(); render(); };
   armEnter(b);
 }
 
@@ -3226,8 +3260,8 @@ function renderChoose(d){
       '</div>' +
     '</div>' +
   '</article>';
-  wireLectureStep(d);
-  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; S.lecture = lectureOpen; save(); render(); };
+  wireSteps();
+  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; render(); };
 
   const opts = Array.from(document.querySelectorAll(".opt"));
   const lock = document.getElementById("lockBtn");
@@ -3291,7 +3325,7 @@ function lockIn(d, opts){
   const lock = document.getElementById("lockBtn");
   lock.disabled = false;
   lock.textContent = "now write it →";
-  lock.onclick = () => { S.stage = "write"; save(); mcOrder = null; mcLocked = false; render(); };
+  lock.onclick = () => { S.stage = "write"; lectureOpen = false; save(); mcOrder = null; mcLocked = false; render(); };
   lock.focus();
   armEnter(lock);
 }
@@ -3330,8 +3364,8 @@ function renderWrite(d){
     '<div id="verdictSlot"></div>' +
   '</article>';
 
-  wireLectureStep(d);
-  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; S.lecture = lectureOpen; save(); render(); };
+  wireSteps();
+  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; render(); };
   graded = null;
 
   const ta = document.getElementById("entry");
@@ -3481,7 +3515,7 @@ function showVerdict(d, res, input, forceReveal){
     renderRail();
     showVerdict(d, res, input, true);
   };
-  if(lec2) lec2.onclick = () => { lectureOpen = true; S.lecture = true; save(); graded = null; render(); };
+  if(lec2) lec2.onclick = () => { lectureOpen = true; graded = null; render(); };
   if(next){
     next.onclick = () => { draft = ""; advance(); render(); window.scrollTo({top:0, behavior:"smooth"}); };
     next.focus(); armEnter(next);
@@ -3547,6 +3581,9 @@ function render(){
   return renderTeach(d);
 }
 
+document.getElementById("brand").onclick = () => {
+  landingOpen = true; showScreen(); window.scrollTo({top:0});
+};
 document.getElementById("aboutBtn").onclick = () => {
   landingOpen = !landingOpen;
   showScreen();
@@ -3563,7 +3600,7 @@ document.getElementById("aiToggle").addEventListener("change", e => {
   aiDisabled = false; setAiSwitch(e.target.checked);
 });
 document.getElementById("resetBtn").onclick = () => {
-  S = blank(); draft = ""; lectureOpen = true; save(); renderTabs(); render(); window.scrollTo({top:0});
+  S = blank(); draft = ""; lectureOpen = false; save(); renderTabs(); render(); window.scrollTo({top:0});
 };
 
 let startId = TRACKS[0].id;
