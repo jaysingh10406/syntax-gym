@@ -68,19 +68,23 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
 .eyebrow{font-size:11px; color:var(--dim); text-transform:lowercase; letter-spacing:0}
 .wrap{max-width:92ch; margin:0 auto; padding:2lh 2ch 6lh}
 
-/* landing hero — what this is, before anything else */
-.hero{padding:1lh 0 1.5lh; border-bottom:1px solid var(--line)}
-.hero h1{font-size:19px; font-weight:700; line-height:1.45; margin:0 0 .5lh;
-  color:var(--fg); max-width:62ch; text-wrap:balance}
-.hero h1 b{color:var(--miss); font-weight:700}
-.hero .lede{margin:0 0 1lh; font-size:13.5px; color:var(--muted); max-width:72ch}
-.hero-how{list-style:none; margin:0 0 1lh; padding:0; display:flex;
-  gap:.2lh 3ch; flex-wrap:wrap}
-.hero-how li{font-size:12.5px; color:var(--muted); display:flex; gap:1ch; align-items:baseline}
+/* landing — its own screen, not a banner on the drill screen */
+.landing{padding:3lh 0 2lh; max-width:76ch}
+.landing h1{font-size:21px; font-weight:700; line-height:1.5; margin:0 0 1lh;
+  color:var(--fg); max-width:60ch; text-wrap:balance}
+.landing h1 b{color:var(--miss); font-weight:700}
+.landing .lede{margin:0 0 2lh; font-size:14px; color:var(--muted); max-width:68ch}
+.hero-how{list-style:none; margin:0 0 2lh; padding:0; display:flex;
+  flex-direction:column; gap:.3lh}
+.hero-how li{font-size:13.5px; color:var(--muted); display:flex; gap:1.5ch;
+  align-items:baseline}
 .hero-how b{color:var(--accent); font-weight:500}
 .hero-how li::before{content:attr(data-n); color:var(--dim); font-size:11px}
-.hero-meta{margin:0; font-size:11px; color:var(--dim)}
+.landing figure.dd{margin:0 0 2lh}
+.hero-meta{margin:0 0 2lh; font-size:11.5px; color:var(--dim)}
 .hero-meta span{color:var(--muted)}
+.landing .actions{margin-top:0}
+.landing-note{margin:1lh 0 0; font-size:11.5px; color:var(--dim)}
 
 /* masthead */
 header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap; padding-bottom:1lh}
@@ -321,7 +325,7 @@ img{max-width:100%}
   <header class="top">
     <div class="brand">syntax <em>gym</em></div>
     <div class="topctl">
-      <button class="ghost" id="howBtn">how it works</button>
+      <button class="ghost" id="aboutBtn">about</button>
       <label class="switch on" id="aiSwitch" title="Have Claude judge free-form code answers">
         <input type="checkbox" id="aiToggle" checked>
         <span class="dot"></span><span id="aiLabel">ai review</span>
@@ -331,9 +335,11 @@ img{max-width:100%}
   </header>
 
 
-  <section class="hero">
+  <section class="landing" id="landing" hidden>
     <h1>An AI agent writes your code. It ships. <b>You can't read it.</b></h1>
-    <p class="lede">Syntax Gym drills the syntax your agent is already producing &mdash;
+    <p class="lede">You approved a diff you didn't understand. You can't review a
+      teammate's PR in that stack, and you can't debug it at 2am when the agent stops
+      helping. Syntax Gym drills the syntax your agent is already producing &mdash;
       until you can review a diff instead of approving it. It skips &ldquo;what is a
       variable&rdquo; entirely and drills only the moments that go wrong quietly.</p>
     <ul class="hero-how">
@@ -341,13 +347,19 @@ img{max-width:100%}
       <li data-n="2"><b>choose</b> it from four options &mdash; every one explained</li>
       <li data-n="3"><b>write</b> it from memory, answer hidden on a miss</li>
     </ul>
+    <div id="landingFig"></div>
     <p class="hero-meta"><span>81 drills</span> &middot; django &middot; python &middot;
       javascript &middot; no signup &middot; nothing leaves your browser &middot; MIT</p>
+    <div class="actions">
+      <button class="primary" id="startBtn">start drilling</button>
+    </div>
+    <p class="landing-note">answers transcribed from official docs only &mdash;
+      djangoproject, python.org, MDN. progress stays in this browser.</p>
   </section>
 
+  <div id="app" hidden>
   <div class="tracks" id="tracks" role="tablist"></div>
   <p class="tagline" id="tagline"></p>
-  <section id="howSlot"></section>
 
   <section class="rail" aria-label="Progress">
     <div class="rail-parts" id="rail"></div>
@@ -361,6 +373,7 @@ img{max-width:100%}
   </section>
 
   <main id="stage"></main>
+  </div>
 
   <footer>
     drills transcribed from official documentation &mdash; <span id="srcLine"></span>.<br>
@@ -3013,8 +3026,6 @@ function selectTrack(id){
   document.getElementById("srcLine").innerHTML =
     TRACKS.map(t => esc(t.sourceName)).join(", ");
   lectureOpen = false;
-  howOpen = false;
-  document.getElementById("howBtn").classList.toggle("on", howOpen);
   renderTabs();
   setAiSwitch(S.ai !== false);
   render();
@@ -3072,7 +3083,8 @@ function setAiSwitch(on){
    STEPPER  (Learn is clickable - it toggles the lecture panel)
    ============================================================ */
 let lectureOpen = false;
-let howOpen = false;
+let landingOpen = false;
+const SEEN_LANDING = "syntax-gym/seen-landing";
 
 function cardHead(d, states){
   const idx = TRACK.drills.indexOf(d) + 1;
@@ -3112,15 +3124,19 @@ function briefDiagram(part){
   const fn = DIAGRAMS[TRACK.id + ":" + part];
   return fn ? '<div class="brief-fig">' + fn() + '</div>' : "";
 }
-function renderHow(){
-  const slot = document.getElementById("howSlot");
-  if(!howOpen){ slot.innerHTML = ""; return; }
-  slot.innerHTML =
-    '<div class="howbox"><h2>Three screens per drill</h2>' +
-    '<p>You read the thing, then prove you can pick it out of four plausible wrong ' +
-    'answers, then write it from memory with the answer still hidden. A miss sends the ' +
-    'drill back to the end of the queue.</p>' +
-    diagramLoop() + '</div>';
+function renderLanding(){
+  const fig = document.getElementById("landingFig");
+  if(fig && !fig.innerHTML) fig.innerHTML = diagramLoop();
+}
+/* two screens: the pitch, then the gym. never both at once. */
+function showScreen(){
+  document.getElementById("landing").hidden = !landingOpen;
+  document.getElementById("app").hidden = landingOpen;
+  const b = document.getElementById("aboutBtn");
+  if(b) b.classList.toggle("on", landingOpen);
+  const r = document.getElementById("resetBtn");
+  if(r) r.hidden = landingOpen;   /* no track context on the landing */
+  if(landingOpen) renderLanding();
 }
 
 /* ============================================================
@@ -3517,7 +3533,8 @@ function renderDone(){
    ============================================================ */
 function render(){
   if(mcCleanup){ mcCleanup(); mcCleanup = null; }
-  renderHow();
+  showScreen();
+  if(landingOpen) return;
   renderRail();
   if(S.phase === "done") return renderDone();
   const d = currentDrill();
@@ -3532,10 +3549,16 @@ function render(){
   return renderTeach(d);
 }
 
-document.getElementById("howBtn").onclick = () => {
-  howOpen = !howOpen;
-  document.getElementById("howBtn").classList.toggle("on", howOpen);
-  renderHow();
+document.getElementById("aboutBtn").onclick = () => {
+  landingOpen = !landingOpen;
+  showScreen();
+  window.scrollTo({top:0});
+};
+document.getElementById("startBtn").onclick = () => {
+  try{ localStorage.setItem(SEEN_LANDING, "1"); }catch(e){}
+  landingOpen = false;
+  render();
+  window.scrollTo({top:0});
 };
 
 document.getElementById("aiToggle").addEventListener("change", e => {
@@ -3548,6 +3571,7 @@ document.getElementById("resetBtn").onclick = () => {
 let startId = TRACKS[0].id;
 try{ const last = localStorage.getItem(LAST_KEY); if(last && window.TRACKS[last]) startId = last; }catch(e){}
 TRACK = null;
+try{ landingOpen = !localStorage.getItem(SEEN_LANDING); }catch(e){ landingOpen = true; }
 selectTrack(startId);
 </script>
 </body>
