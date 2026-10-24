@@ -2854,7 +2854,8 @@ const LAST_KEY = "syntax-gym/last-track";
 let TRACK = null, S = null;
 
 function blank(){
-  return {i:0, stage:"teach", seenBrief:{}, taught:{}, results:{}, mcResults:{}, attempts:{},
+  return {i:0, stage:"teach", seenBrief:{}, taught:{}, lecture:true,
+          results:{}, mcResults:{}, attempts:{},
           firstTry:{}, hinted:{}, revealed:{}, streak:0, best:0, redo:[],
           phase:"main", ai:true};
 }
@@ -2908,7 +2909,7 @@ function advance(){
     if(!S.redo.length) S.phase = "done";
   }
   S.stage = (S.phase === "redo") ? "choose" : "teach";
-  lectureOpen = false;
+  lectureOpen = S.lecture !== false;
   save();
 }
 
@@ -3021,7 +3022,7 @@ function selectTrack(id){
   document.getElementById("tagline").textContent = TRACK.blurb;
   document.getElementById("srcLine").innerHTML =
     TRACKS.map(t => esc(t.sourceName)).join(", ");
-  lectureOpen = false;
+  lectureOpen = S.lecture !== false;
   renderTabs();
   setAiSwitch(S.ai !== false);
   render();
@@ -3078,7 +3079,7 @@ function setAiSwitch(on){
 /* ============================================================
    STEPPER  (Learn is clickable - it toggles the lecture panel)
    ============================================================ */
-let lectureOpen = false;
+let lectureOpen = true;
 let landingOpen = false;
 const SEEN_LANDING = "syntax-gym/seen-landing";
 
@@ -3105,7 +3106,7 @@ function cardHead(d, states){
 }
 function wireLectureStep(d){
   const b = document.getElementById("lecStep");
-  if(b) b.onclick = () => { lectureOpen = !lectureOpen; render(); };
+  if(b) b.onclick = () => { lectureOpen = !lectureOpen; S.lecture = lectureOpen; save(); render(); };
 }
 function lecturePanel(d){
   if(!lectureOpen) return "";
@@ -3202,7 +3203,6 @@ function shuffled(n){
   return a;
 }
 function renderChoose(d){
-  if(!(S.taught && S.taught[d.id])) lectureOpen = true;
   if(!mcOrder || mcOrder.length !== d.mc.options.length || !mcLocked){
     mcOrder = shuffled(d.mc.options.length); mcPick = -1; mcLocked = false;
   }
@@ -3227,7 +3227,7 @@ function renderChoose(d){
     '</div>' +
   '</article>';
   wireLectureStep(d);
-  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; render(); };
+  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; S.lecture = lectureOpen; save(); render(); };
 
   const opts = Array.from(document.querySelectorAll(".opt"));
   const lock = document.getElementById("lockBtn");
@@ -3301,7 +3301,6 @@ function lockIn(d, opts){
    ============================================================ */
 let graded = null, draft = "";
 function renderWrite(d){
-  if(!(S.taught && S.taught[d.id]) && !graded) lectureOpen = true;
   const learn = (S.phase === "redo") ? "skipped" : "was";
   const used = !!S.hinted[d.id];
   const tries = S.attempts[d.id] || 0;
@@ -3332,7 +3331,7 @@ function renderWrite(d){
   '</article>';
 
   wireLectureStep(d);
-  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; render(); };
+  document.getElementById("lecBtn").onclick = () => { lectureOpen = !lectureOpen; S.lecture = lectureOpen; save(); render(); };
   graded = null;
 
   const ta = document.getElementById("entry");
@@ -3482,7 +3481,7 @@ function showVerdict(d, res, input, forceReveal){
     renderRail();
     showVerdict(d, res, input, true);
   };
-  if(lec2) lec2.onclick = () => { lectureOpen = true; graded = null; render(); };
+  if(lec2) lec2.onclick = () => { lectureOpen = true; S.lecture = true; save(); graded = null; render(); };
   if(next){
     next.onclick = () => { draft = ""; advance(); render(); window.scrollTo({top:0, behavior:"smooth"}); };
     next.focus(); armEnter(next);
@@ -3564,7 +3563,7 @@ document.getElementById("aiToggle").addEventListener("change", e => {
   aiDisabled = false; setAiSwitch(e.target.checked);
 });
 document.getElementById("resetBtn").onclick = () => {
-  S = blank(); draft = ""; lectureOpen = false; save(); renderTabs(); render(); window.scrollTo({top:0});
+  S = blank(); draft = ""; lectureOpen = true; save(); renderTabs(); render(); window.scrollTo({top:0});
 };
 
 let startId = TRACKS[0].id;
