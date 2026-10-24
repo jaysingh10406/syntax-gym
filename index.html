@@ -87,7 +87,8 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
 .landing-note{margin:1lh 0 0; font-size:11.5px; color:var(--dim)}
 
 /* masthead */
-header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap; padding-bottom:1lh}
+header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap;
+  padding-bottom:1lh; border-bottom:1px solid var(--line)}
 .brand{font-size:19px; font-weight:700; color:var(--fg); letter-spacing:-0.01em;
   appearance:none; background:none; border:0; padding:0; height:auto;
   font-family:inherit; text-transform:none; cursor:pointer}
@@ -107,22 +108,20 @@ header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap; padding-bo
 .switch.off .dot{background:var(--miss)}
 .switch:focus-within{outline:1px solid var(--accent); outline-offset:1px}
 
-/* track tabs */
-.tracks{display:flex; gap:0; border-bottom:1px solid var(--line); margin-top:1lh}
-.tab{appearance:none; background:none; border:0; border-bottom:2px solid transparent;
-  justify-content:flex-start;
-  padding:0 2ch; height:2.4lh; cursor:pointer; display:flex; align-items:center; gap:1ch;
-  font-family:inherit; font-size:13px; font-weight:500; color:var(--dim);
-  text-transform:none; letter-spacing:0}
-.tab .tsub{font-size:11px; color:var(--dim)}
-.tab .tpip{color:var(--pipc)}
-.tab .tpip::before{content:"●"}
-.tab:hover{color:var(--muted); background:var(--bg-1)}
-.tab[aria-selected="true"]{color:var(--fg); border-bottom-color:var(--pipc)}
-.tab[data-id="django"]{--pipc:var(--t-django)}
-.tab[data-id="python"]{--pipc:var(--t-python)}
-.tab[data-id="javascript"]{--pipc:var(--t-javascript)}
-.tab:focus-visible{outline:1px solid var(--accent); outline-offset:-2px}
+/* track select — one control instead of a row of tabs */
+.tracksel{display:inline-flex; align-items:center; gap:1ch; height:2lh;
+  padding:0 1ch; border:1px solid var(--line); cursor:pointer}
+.tracksel:hover{border-color:var(--dim)}
+.tracksel:focus-within{border-color:var(--accent)}
+.tracksel .pip{color:var(--pipc); font-size:10px; line-height:1}
+.tracksel .pip::before{content:"\25cf"}
+.tracksel::after{content:"\25be"; color:var(--dim); font-size:10px; pointer-events:none}
+.tracksel select{appearance:none; background:none; border:0; outline:0; padding:0;
+  color:var(--fg); font-family:inherit; font-size:12px; cursor:pointer}
+.tracksel select option{background:var(--bg-1); color:var(--fg)}
+.wrap[data-track="django"]{--pipc:var(--t-django)}
+.wrap[data-track="python"]{--pipc:var(--t-python)}
+.wrap[data-track="javascript"]{--pipc:var(--t-javascript)}
 .tagline{color:var(--muted); font-size:13px; margin:1lh 0 0; max-width:72ch}
 
 /* diagrams */
@@ -347,7 +346,7 @@ footer a{color:var(--link)}
 
 @media (max-width:640px){
   .rail-parts{flex-wrap:wrap; gap:1lh 2ch} .part{flex:1 1 44%}
-  .keyhint{display:none} .tab .tsub{display:none}
+  .keyhint{display:none}
   .mascot{display:none}
   .wrap{padding:1lh 1ch 4lh}
 }
@@ -358,6 +357,10 @@ footer a{color:var(--link)}
 <div class="wrap" id="wrap" data-track="django">
   <header class="top">
     <button class="brand" id="brand" title="back to the start">syntax&nbsp;<em>gym</em></button>
+    <label class="tracksel" id="trackWrap">
+      <span class="pip"></span>
+      <select id="trackSel" aria-label="Track"></select>
+    </label>
     <div class="topctl">
       <button class="ghost" id="aboutBtn">about</button>
       <label class="switch on" id="aiSwitch" title="Have Claude judge free-form code answers">
@@ -392,7 +395,6 @@ footer a{color:var(--link)}
   </section>
 
   <div id="app" hidden>
-  <div class="tracks" id="tracks" role="tablist"></div>
   <p class="tagline" id="tagline"></p>
 
   <section class="rail" aria-label="Progress">
@@ -3034,20 +3036,16 @@ async function aiReview(d, input){
 const stage   = document.getElementById("stage");
 const railEl  = document.getElementById("rail");
 const wrapEl  = document.getElementById("wrap");
-const tabsEl  = document.getElementById("tracks");
 
 function renderTabs(){
-  tabsEl.innerHTML = TRACKS.map(t => {
+  const sel = document.getElementById("trackSel");
+  sel.innerHTML = TRACKS.map(t => {
     const st = loadState(t.id);
     const done = Object.values(st.results).filter(v => v === "pass").length;
-    return '<button class="tab" role="tab" data-id="' + t.id + '" ' +
-      'aria-selected="' + (t.id === TRACK.id) + '">' +
-      '<span class="tpip"></span><span>' + esc(t.name) + '</span>' +
-      '<span class="tsub">' + done + '/' + t.drills.length + '</span></button>';
+    return '<option value="' + t.id + '"' + (t.id === TRACK.id ? " selected" : "") + '>' +
+           esc(t.name) + "  " + done + "/" + t.drills.length + '</option>';
   }).join("");
-  Array.from(tabsEl.querySelectorAll(".tab")).forEach(b => {
-    b.onclick = () => selectTrack(b.dataset.id);
-  });
+  sel.onchange = () => selectTrack(sel.value);
 }
 
 function selectTrack(id){
@@ -3105,13 +3103,11 @@ function setAiSwitch(on){
   const cb = document.getElementById("aiToggle");
   const sw = document.getElementById("aiSwitch");
   if(aiDisabled){
-    cb.checked = false; cb.disabled = true;
-    sw.classList.remove("on"); sw.classList.add("off");
-    sw.title = "LLM grading needs the Claude artifact runtime - unavailable on this host. "
-             + "Grading falls back to the local checklist, and costs nothing.";
-    document.getElementById("aiLabel").textContent = "ai review \u00b7 n/a";
+    /* no runtime here, so the control would be decoration — remove it */
+    sw.hidden = true; cb.checked = false; cb.disabled = true;
     return;
   }
+  sw.hidden = false;
   cb.checked = on; cb.disabled = false;
   sw.classList.toggle("on", on); sw.classList.remove("off");
   document.getElementById("aiLabel").textContent = "ai review";
