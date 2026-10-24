@@ -1,14 +1,14 @@
 # Syntax Gym
 
-**An AI agent writes your code. It ships. You can't read it.**
+**An AI agent writes your code. It ships. You couldn't have written it.**
 
-You approved a diff you didn't understand. You can't review a teammate's PR in that
-stack, and you can't debug it at 2am when the agent stops being useful. That isn't an
-argument against agents — it's an argument for being able to verify what they produce.
+Syntax Gym is typing drills for the syntax your agent keeps producing. You are told what
+to produce, you type it from memory, and it tells you exactly what you missed. Nothing is
+generated for you and nothing is auto-completed.
 
-Syntax Gym drills the syntax your agent is already writing, so you can review a diff
-instead of approving it. It skips "what is a variable" entirely and drills only the
-moments that go wrong quietly.
+It is for developers who can already program but are shipping in a stack they have only
+ever generated. So it skips "what is a variable" entirely and drills only the moments that
+go wrong quietly — the ones that pass review because they look right.
 
 81 drills · Django 31 · Python 25 · JavaScript 25 · one HTML file · no signup · MIT
 
