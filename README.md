@@ -1,14 +1,15 @@
 # Syntax Gym
 
-**An AI agent writes your code. It ships. You couldn't have written it.**
+**You can already program. The framework is what's unfamiliar. Drill it.**
 
-Syntax Gym is typing drills for the syntax your agent keeps producing. You are told what
-to produce, you type it from memory, and it tells you exactly what you missed. Nothing is
+Syntax Gym is typing drills for a stack you are ramping up on. You are told what to
+produce, you type it from memory, and it tells you exactly what you missed. Nothing is
 generated for you and nothing is auto-completed.
 
-It is for developers who can already program but are shipping in a stack they have only
-ever generated. So it skips "what is a variable" entirely and drills only the moments that
-go wrong quietly — the ones that pass review because they look right.
+It is for experienced programmers dropped into an unfamiliar language or framework —
+reviewing a PR in it, inheriting a service written in it, or reading back whatever your
+agent has been producing. So it skips "what is a variable" entirely and drills only the
+moments that go wrong quietly — the ones that pass review because they look right.
 
 81 drills · Django 31 · Python 25 · JavaScript 25 · one HTML file · no signup · MIT
 
