@@ -1,15 +1,16 @@
 # Syntax Gym
 
-**Syntax drills for developers who already know how to program.**
+**An AI agent writes your code. It ships. You can't read it.**
 
-You have twelve years of experience. You decide to pick up Python, and the first
-thing every tutorial does is explain what a variable is. You don't need concepts.
-You need the muscle memory — the commands, and the exact shape of the code.
+You approved a diff you didn't understand. You can't review a teammate's PR in that
+stack, and you can't debug it at 2am when the agent stops being useful. That isn't an
+argument against agents — it's an argument for being able to verify what they produce.
 
-Syntax Gym strips three official tutorials down to their load-bearing moments and
-makes you type each one from memory.
+Syntax Gym drills the syntax your agent is already writing, so you can review a diff
+instead of approving it. It skips "what is a variable" entirely and drills only the
+moments that go wrong quietly.
 
-81 drills · Django · Python · JavaScript · one HTML file · no build step
+81 drills · Django 31 · Python 25 · JavaScript 25 · one HTML file · no signup · MIT
 
 ---
 

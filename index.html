@@ -68,6 +68,19 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
 .eyebrow{font-size:11px; color:var(--dim); text-transform:lowercase; letter-spacing:0}
 .wrap{max-width:92ch; margin:0 auto; padding:2lh 2ch 6lh}
 
+/* landing hero — what this is, before anything else */
+.hero{padding:1lh 0 1.5lh; border-bottom:1px solid var(--line)}
+.hero h1{font-size:19px; font-weight:700; line-height:1.45; margin:0 0 .5lh;
+  color:var(--fg); max-width:62ch; text-wrap:balance}
+.hero h1 b{color:var(--miss); font-weight:700}
+.hero .lede{margin:0 0 1lh; font-size:13.5px; color:var(--muted); max-width:72ch}
+.hero-how{list-style:none; margin:0 0 1lh; padding:0; display:flex; gap:3ch; flex-wrap:wrap}
+.hero-how li{font-size:12.5px; color:var(--muted); display:flex; gap:1ch; align-items:baseline}
+.hero-how b{color:var(--accent); font-weight:500}
+.hero-how li::before{content:attr(data-n); color:var(--dim); font-size:11px}
+.hero-meta{margin:0; font-size:11px; color:var(--dim)}
+.hero-meta span{color:var(--muted)}
+
 /* masthead */
 header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap; padding-bottom:1lh}
 .brand{font-size:19px; font-weight:700; color:var(--fg); letter-spacing:-0.01em}
@@ -87,6 +100,7 @@ header.top{display:flex; align-items:center; gap:2ch; flex-wrap:wrap; padding-bo
 /* track tabs */
 .tracks{display:flex; gap:0; border-bottom:1px solid var(--line); margin-top:1lh}
 .tab{appearance:none; background:none; border:0; border-bottom:2px solid transparent;
+  justify-content:flex-start;
   padding:0 2ch; height:2.4lh; cursor:pointer; display:flex; align-items:center; gap:1ch;
   font-family:inherit; font-size:13px; font-weight:500; color:var(--dim);
   text-transform:none; letter-spacing:0}
@@ -144,7 +158,7 @@ figure.dd figcaption{margin-top:.5lh; font-size:11px; color:var(--dim)}
 
 /* stepper */
 .steprow{display:flex; border-bottom:1px solid var(--line)}
-.step{flex:1 1 0; display:flex; align-items:center; gap:1ch; padding:0 2ch; height:2lh;
+.step{flex:1 1 0; display:flex; justify-content:flex-start; align-items:center; gap:1ch; padding:0 2ch; height:2lh;
   border:0; border-top:2px solid var(--bg-2); background:var(--bg-1); min-width:0;
   font-family:inherit; font-size:11px; color:var(--dim);
   text-transform:none; letter-spacing:0; text-align:left}
@@ -199,7 +213,8 @@ pre.code.dim{opacity:.6}
 .mcq{font-size:15px; font-weight:500; line-height:1.5; margin:0 0 1lh;
   text-wrap:balance; color:var(--fg)}
 .opts{display:flex; flex-direction:column; margin:0 0 1lh}
-.opt{display:flex; gap:2ch; align-items:flex-start; width:100%; text-align:left;
+.opt{display:flex; justify-content:flex-start; gap:2ch; align-items:flex-start;
+  width:100%; text-align:left;
   cursor:pointer; padding:.4lh 1ch; border:0; border-left:2px solid transparent;
   background:none; font-family:inherit; font-size:13px; line-height:1.6;
   color:var(--fg); white-space:pre-wrap; text-transform:none; letter-spacing:0}
@@ -247,7 +262,7 @@ button.primary:hover:not(:disabled){filter:brightness(1.1); color:var(--on-accen
 button.ghost{border-color:transparent; color:var(--dim)}
 button.ghost:hover:not(:disabled){border-color:var(--line); color:var(--fg)}
 button.on{border-color:var(--accent); color:var(--accent)}
-button:disabled{opacity:.35; cursor:default}
+button:disabled{opacity:.4; cursor:default; text-decoration:none}
 .keyhint{font-size:11px; color:var(--dim); margin-left:auto}
 kbd{font-family:inherit; font-size:11px; border:1px solid var(--line); padding:0 .6ch;
   color:var(--muted)}
@@ -294,7 +309,6 @@ footer a{color:var(--link)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <style>
-/* standalone reset — the hosted build gets this from its wrapper */
 body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
@@ -313,6 +327,21 @@ img{max-width:100%}
       <button class="ghost" id="resetBtn">reset track</button>
     </div>
   </header>
+
+
+  <section class="hero">
+    <h1>An AI agent writes your code. It ships. <b>You can't read it.</b></h1>
+    <p class="lede">Syntax Gym drills the syntax your agent is already producing &mdash;
+      until you can review a diff instead of approving it. It skips &ldquo;what is a
+      variable&rdquo; entirely and drills only the moments that go wrong quietly.</p>
+    <ul class="hero-how">
+      <li data-n="1"><b>learn</b> the thing, and the one detail that bites</li>
+      <li data-n="2"><b>choose</b> it from four options &mdash; every one explained</li>
+      <li data-n="3"><b>write</b> it from memory, answer hidden on a miss</li>
+    </ul>
+    <p class="hero-meta"><span>81 drills</span> &middot; django &middot; python &middot;
+      javascript &middot; no signup &middot; nothing leaves your browser &middot; MIT</p>
+  </section>
 
   <div class="tracks" id="tracks" role="tablist"></div>
   <p class="tagline" id="tagline"></p>
@@ -3110,7 +3139,7 @@ function renderBrief(part){
       '<p class="brief-body">' + p.brief.body + '</p>' +
       '<ul class="points">' + p.brief.points.map(t => '<li><span>' + t + '</span></li>').join("") + '</ul>' +
       briefDiagram(part) +
-      '<div class="actions"><button class="primary" id="goBtn">Start part ' + p.n + '</button>' +
+      '<div class="actions"><button class="primary" id="goBtn">start part ' + p.n + '</button>' +
       '<span class="keyhint"><kbd>↩</kbd> moves you through</span></div>' +
     '</div>' +
   '</article>';
@@ -3132,8 +3161,8 @@ function renderTeach(d){
               : '<span class="eyebrow showlbl">The shape</span>') +
       codeBlock(d.teach.show, langOf(d)) +
       '<div class="actions">' +
-        '<button class="primary" id="goBtn">Got it → Choose</button>' +
-        '<button class="ghost" id="jumpBtn">I know this, let me write it</button>' +
+        '<button class="primary" id="goBtn">got it → choose</button>' +
+        '<button class="ghost" id="jumpBtn">i know this, let me write it</button>' +
         '<span class="keyhint"><kbd>↩</kbd> to continue</span>' +
       '</div>' +
     '</div>' +
@@ -3175,8 +3204,8 @@ function renderChoose(d){
       '</div>' +
       '<div id="mcFeedback"></div>' +
       '<div class="actions">' +
-        '<button class="primary" id="lockBtn" disabled>Lock it in</button>' +
-        '<button id="lecBtn" class="' + (lectureOpen ? "on" : "") + '">Lecture</button>' +
+        '<button class="primary" id="lockBtn" disabled>lock it in</button>' +
+        '<button id="lecBtn" class="' + (lectureOpen ? "on" : "") + '">lecture</button>' +
         '<span class="keyhint"><kbd>1</kbd>–<kbd>4</kbd> to pick, <kbd>↩</kbd> to lock</span>' +
       '</div>' +
     '</div>' +
@@ -3245,7 +3274,7 @@ function lockIn(d, opts){
 
   const lock = document.getElementById("lockBtn");
   lock.disabled = false;
-  lock.textContent = "Now write it →";
+  lock.textContent = "now write it →";
   lock.onclick = () => { S.stage = "write"; save(); mcOrder = null; mcLocked = false; render(); };
   lock.focus();
   armEnter(lock);
@@ -3274,10 +3303,10 @@ function renderWrite(d){
           (d.kind === "cmd" ? "type the command from memory" : "write it from memory") + '"></textarea>' +
       '</div></div>' +
       '<div class="actions">' +
-        '<button class="primary" id="checkBtn">Check' + (tries ? " again" : "") + '</button>' +
-        '<button id="hintBtn"' + (used ? " disabled" : "") + '>Hint</button>' +
-        '<button id="lecBtn" class="' + (lectureOpen ? "on" : "") + '">Lecture</button>' +
-        '<button class="ghost" id="skipBtn">Skip</button>' +
+        '<button class="primary" id="checkBtn">check' + (tries ? " again" : "") + '</button>' +
+        '<button id="hintBtn"' + (used ? " disabled" : "") + '>hint</button>' +
+        '<button id="lecBtn" class="' + (lectureOpen ? "on" : "") + '">lecture</button>' +
+        '<button class="ghost" id="skipBtn">skip</button>' +
         '<span class="keyhint"><kbd>' + META + '</kbd> + <kbd>↩</kbd> to check</span>' +
       '</div>' +
       '<div id="hintSlot">' + (used ? hintHTML(d) : "") + '</div>' +
@@ -3319,7 +3348,7 @@ function renderWrite(d){
     showVerdict(d, {verdict:"miss", say:"Skipped — requeued for later.", checks:[]}, "", true);
   };
 }
-function hintHTML(d){ return '<div class="hintbox"><span class="eyebrow">Hint</span>' + d.hint + '</div>'; }
+function hintHTML(d){ return '<div class="hintbox"><span class="eyebrow">hint</span>' + d.hint + '</div>'; }
 function autoGrow(ta){
   ta.style.height = "auto";
   ta.style.height = Math.min(Math.max(ta.scrollHeight, 130), 520) + "px";
@@ -3338,9 +3367,9 @@ async function doCheck(){
   }else{
     res = gradeCode(d, input);
     if(S.ai && !aiDisabled && input.trim()){
-      btn.disabled = true; btn.textContent = "Reviewing…";
+      btn.disabled = true; btn.textContent = "reviewing…";
       const ai = await aiReview(d, input);
-      btn.disabled = false; btn.textContent = "Check";
+      btn.disabled = false; btn.textContent = "check";
       if(ai) res = {verdict:ai.verdict, say:ai.say, checks:res.checks, notes:ai.notes, by:"Claude"};
     }
   }
@@ -3398,14 +3427,14 @@ function showVerdict(d, res, input, forceReveal){
                                     : (S.i >= TRACK.drills.length - 1 && !S.redo.length);
   let acts = "";
   if(res.verdict === "pass"){
-    acts = '<button class="primary" id="nextBtn">' + (last ? "Finish" : "Next drill") + '</button>';
+    acts = '<button class="primary" id="nextBtn">' + (last ? "finish" : "next drill") + '</button>';
   }else if(reveal){
-    acts = '<button class="primary" id="nextBtn">' + (last ? "Finish" : "Next drill") + '</button>' +
-           '<button id="retryBtn">Try again</button>';
+    acts = '<button class="primary" id="nextBtn">' + (last ? "finish" : "next drill") + '</button>' +
+           '<button id="retryBtn">try again</button>';
   }else{
-    acts = '<button class="primary" id="retryBtn">Try again</button>' +
-           '<button id="revealBtn">Show answer</button>' +
-           '<button id="lecBtn2">Lecture</button>';
+    acts = '<button class="primary" id="retryBtn">try again</button>' +
+           '<button id="revealBtn">show answer</button>' +
+           '<button id="lecBtn2">lecture</button>';
   }
 
   document.getElementById("verdictSlot").innerHTML =
@@ -3475,7 +3504,7 @@ function renderDone(){
     ' of those on the first attempt with no hint. ' + spotted + ' of ' + asked +
     ' spotted on the first pick. Best clean streak ' + S.best + '.</p>' +
     '<div class="actions" style="justify-content:center">' +
-      '<button class="primary" id="againBtn">Run ' + esc(TRACK.name) + ' again</button></div></div>';
+      '<button class="primary" id="againBtn">run ' + esc(TRACK.name) + ' again</button></div></div>';
   const b = document.getElementById("againBtn");
   b.onclick = () => { const best = S.best; S = blank(); S.best = best; save(); render(); window.scrollTo({top:0}); };
   armEnter(b);
