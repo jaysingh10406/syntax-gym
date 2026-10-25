@@ -18,7 +18,7 @@ state={"i":int(idx),"stage":stage,"seenBrief":{"1":True,"2":True,"3":True,"4":Tr
  "results":{},"mcResults":{},"attempts":{},"firstTry":{},"hinted":{},"revealed":{},
  "streak":0,"best":0,"redo":[],"phase":"main","ai":True}
 seed=('<script>try{localStorage.setItem("syntax-gym/last-track",%s);'
-      'localStorage.setItem("syntax-gym/v3/"+%s,%s);}catch(e){}</script>'
+      'localStorage.setItem("syntax-gym/v3/"+%s,%s);localStorage.setItem("syntax-gym/seen-landing","1");}catch(e){}</script>'
       % (json.dumps(track),json.dumps(track),json.dumps(json.dumps(state))))
 open(out,"w",encoding="utf-8").write(s.replace("<body>","<body>\n"+seed,1))
 PY
