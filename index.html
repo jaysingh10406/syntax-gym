@@ -71,7 +71,8 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
 
 /* landing — its own screen, not a banner on the drill screen */
 .landing{padding:3lh 0 2lh; max-width:76ch}
-.landing h1{font-size:21px; font-weight:700; line-height:1.5; margin:0 0 1lh;
+.landing h1{font-size:clamp(22px,4.2vw,34px); font-weight:700; line-height:1.2;
+  letter-spacing:-.01em; margin:0 0 1lh;
   color:var(--fg); max-width:60ch; text-wrap:balance}
 .landing h1 b{color:var(--accent); font-weight:700}
 .landing .lede{margin:0 0 2lh; font-size:14px; color:var(--muted); max-width:68ch; text-wrap:pretty}
@@ -79,14 +80,15 @@ code{font-family:inherit; color:var(--c-key); background:none; padding:0}
   flex-direction:column; gap:.3lh}
 .hero-how li{font-size:13.5px; color:var(--muted); display:flex; gap:1.5ch;
   align-items:baseline}
-.hero-how b{color:var(--accent); font-weight:500}
+.hero-how b{color:var(--accent); font-weight:500; flex:none}  /* flex item + global
+   overflow-wrap:anywhere was breaking 'learn'/'choose'/'write' mid-word at 390px */
 .hero-how li::before{content:attr(data-n); color:var(--dim); font-size:11px}
 .landing .demo{display:block; width:100%; max-width:100%; height:auto;
   border:1px solid var(--line); margin:0 0 2lh; background:var(--bg-1)}
 .landing figure.dd{margin:0 0 2lh}
 .hero-meta{margin:0 0 2lh; font-size:12px; color:var(--dim)}
 .hero-meta span{color:var(--muted)}
-.landing .actions{margin-top:0}
+.landing .actions{margin:0 0 1.5lh}
 .landing-note{margin:1lh 0 0; font-size:12px; color:var(--dim)}
 
 /* masthead */
@@ -351,7 +353,7 @@ footer a{color:var(--link)}
   .rail-parts{flex-wrap:wrap; gap:1lh 2ch} .part{flex:1 1 44%}
   .keyhint{display:none}
   .mascot{display:none}
-  .wrap{padding:1lh 1ch 4lh}
+  .wrap{padding:1lh 2ch 4lh}
 }
 @media (prefers-reduced-motion:reduce){
   /* keep opacity bridges, drop every transform/vestibular move */
@@ -411,26 +413,26 @@ footer a{color:var(--link)}
 
 
   <section class="landing" id="landing" hidden>
-    <h1>You can already program. The framework is what's unfamiliar. <b>Drill it.</b></h1>
-    <p class="lede"><b>Syntax Gym is typing drills for a stack you are ramping up
-      on.</b> You are told what to produce, you type it from memory, and it tells you
-      exactly what you missed. Nothing is generated for you and nothing is
+    <h1>The framework is what's unfamiliar. <b>Drill it.</b></h1>
+    <p class="lede">You can already program. Syntax Gym is typing drills for a stack you
+      are ramping up on: you are told what to produce, you type it from memory, and it
+      tells you exactly what you missed. Nothing is generated and nothing is
       auto-completed.</p>
-    <p class="lede">For experienced programmers dropped into an unfamiliar language or
-      framework &mdash; reviewing a PR in it, inheriting a service written in it, or
-      reading back whatever your agent has been producing. It skips &ldquo;what is a
-      variable&rdquo; entirely and drills only the moments that go wrong quietly.</p>
+    <div class="actions">
+      <button class="primary" id="startBtn">start drilling</button>
+    </div>
+    <p class="hero-meta"><span>81 drills</span> &middot; django &middot; python &middot;
+      javascript &middot; no signup &middot; nothing leaves your browser &middot; MIT</p>
+    <p class="lede">For experienced programmers dropped into an unfamiliar framework
+      &mdash; reviewing a PR in it, or reading back whatever your agent has been
+      producing. It skips &ldquo;what is a variable&rdquo; and drills only the moments
+      that go wrong quietly.</p>
     <ul class="hero-how">
       <li data-n="1"><b>learn</b> the thing, and the one detail that bites</li>
       <li data-n="2"><b>choose</b> it from four options &mdash; every one explained</li>
       <li data-n="3"><b>write</b> it from memory, answer hidden on a miss</li>
     </ul>
     <div id="landingFig"></div>
-    <p class="hero-meta"><span>81 drills</span> &middot; django &middot; python &middot;
-      javascript &middot; no signup &middot; nothing leaves your browser &middot; MIT</p>
-    <div class="actions">
-      <button class="primary" id="startBtn">start drilling</button>
-    </div>
     <p class="landing-note">answers transcribed from official docs only &mdash;
       djangoproject, python.org, MDN. progress stays in this browser.</p>
   </section>
